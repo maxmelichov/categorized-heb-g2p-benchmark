@@ -1,3 +1,5 @@
 *.png
 *.onnx
 .DS_Store
+weights/
+.cache/

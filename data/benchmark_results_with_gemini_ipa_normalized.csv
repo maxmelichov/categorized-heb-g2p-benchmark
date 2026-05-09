@@ -1,0 +1,67 @@
+model,category,1-WER,1-WER_CI,1-CER,1-CER_CI
+gemini,acronyms,0.75,0.08,0.9524,0.0168
+gemini,foreign,0.7613,0.0665,0.9659,0.0098
+gemini,gender,0.5263,0.0744,0.9032,0.0172
+gemini,homographs,0.9704,0.0221,0.9883,0.0094
+gemini,ilspeech-v2-test,0.7391,0.0215,0.9464,0.0055
+gemini,minimal stress pairs,0.7133,0.0733,0.9324,0.0173
+gemini,names,0.7733,0.07,0.9485,0.0162
+gemini,penultimate stress,0.8609,0.0536,0.9804,0.0078
+gemini,rare phonemes,0.702,0.0729,0.939,0.0165
+gemini,slang,0.8654,0.0589,0.9678,0.0147
+gemini,OVERALL,0.7572,0.0159,0.9501,0.0038
+renikud,acronyms,0.7303,0.0716,0.934,0.0219
+renikud,foreign,0.6194,0.0777,0.9273,0.0186
+renikud,gender,0.5329,0.0787,0.8397,0.0366
+renikud,homographs,0.7094,0.0652,0.8008,0.0538
+renikud,ilspeech-v2-test,0.8475,0.0182,0.961,0.0057
+renikud,minimal stress pairs,0.7267,0.07,0.8351,0.0543
+renikud,names,0.8533,0.06,0.9568,0.0191
+renikud,penultimate stress,0.8543,0.0563,0.975,0.0102
+renikud,rare phonemes,0.4768,0.0795,0.8695,0.0271
+renikud,slang,0.6859,0.0704,0.9072,0.0241
+renikud,OVERALL,0.771,0.0173,0.9302,0.0069
+renikud_phonikud,acronyms,0.3092,0.0741,0.7944,0.0277
+renikud_phonikud,foreign,0.7226,0.0714,0.9425,0.0166
+renikud_phonikud,gender,0.5395,0.0757,0.8306,0.0373
+renikud_phonikud,homographs,0.6897,0.0667,0.7979,0.0543
+renikud_phonikud,ilspeech-v2-test,0.8358,0.0194,0.9564,0.0061
+renikud_phonikud,minimal stress pairs,0.76,0.07,0.8405,0.0547
+renikud_phonikud,names,0.8933,0.0501,0.9638,0.0189
+renikud_phonikud,penultimate stress,0.8543,0.0603,0.9768,0.0095
+renikud_phonikud,rare phonemes,0.2914,0.0734,0.8096,0.0268
+renikud_phonikud,slang,0.7051,0.0744,0.9109,0.0255
+renikud_phonikud,OVERALL,0.743,0.0188,0.9186,0.0073
+phonikud,acronyms,0.4211,0.0783,0.8301,0.032
+phonikud,foreign,0.6839,0.0705,0.9345,0.0173
+phonikud,gender,0.4013,0.075,0.8246,0.0333
+phonikud,homographs,0.6946,0.0682,0.8027,0.0538
+phonikud,ilspeech-v2-test,0.83,0.02,0.9566,0.0059
+phonikud,minimal stress pairs,0.7333,0.0733,0.8351,0.0537
+phonikud,names,0.8733,0.0533,0.9638,0.0159
+phonikud,penultimate stress,0.7947,0.0705,0.9643,0.0135
+phonikud,rare phonemes,0.3709,0.0753,0.8406,0.0277
+phonikud,slang,0.609,0.0759,0.8824,0.027
+phonikud,OVERALL,0.7305,0.0191,0.9193,0.0074
+renikud_ctc,acronyms,0.75,0.0697,0.9394,0.0209
+renikud_ctc,foreign,0.6774,0.0748,0.9345,0.0181
+renikud_ctc,gender,0.3947,0.0779,0.755,0.0419
+renikud_ctc,homographs,0.665,0.067,0.79,0.0527
+renikud_ctc,ilspeech-v2-test,0.8559,0.0191,0.9622,0.0059
+renikud_ctc,minimal stress pairs,0.74,0.0733,0.8378,0.0549
+renikud_ctc,names,0.8267,0.0633,0.9345,0.0274
+renikud_ctc,penultimate stress,0.8477,0.0589,0.9732,0.0104
+renikud_ctc,rare phonemes,0.4371,0.0778,0.8545,0.027
+renikud_ctc,slang,0.6859,0.0725,0.8998,0.0261
+renikud_ctc,OVERALL,0.7663,0.0171,0.9243,0.007
+phonikud_byt5,acronyms,0.6382,0.0775,0.9134,0.0227
+phonikud_byt5,foreign,0.5419,0.0777,0.895,0.022
+phonikud_byt5,gender,0.375,0.0782,0.7591,0.0409
+phonikud_byt5,homographs,0.6158,0.0663,0.7686,0.0521
+phonikud_byt5,ilspeech-v2-test,0.8378,0.0188,0.9538,0.006
+phonikud_byt5,minimal stress pairs,0.7,0.0767,0.8243,0.0544
+phonikud_byt5,names,0.76,0.07,0.9123,0.0266
+phonikud_byt5,penultimate stress,0.7682,0.0695,0.9527,0.0189
+phonikud_byt5,rare phonemes,0.351,0.0753,0.8225,0.0297
+phonikud_byt5,slang,0.5641,0.0754,0.854,0.0304
+phonikud_byt5,OVERALL,0.7194,0.019,0.9087,0.0077

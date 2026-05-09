@@ -11,5 +11,8 @@ dependencies = [
     "phonikud>=0.4.1",
     "phonikud-onnx>=1.0.6",
     "renikud-onnx>=0.1.0",
+    "safetensors>=0.4.0",
+    "torch>=2.10.0",
     "tqdm>=4.67.3",
+    "transformers[torch]>=5.2.0",
 ]

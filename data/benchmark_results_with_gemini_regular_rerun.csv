@@ -1,15 +1,15 @@
 model,category,1-WER,1-WER_CI,1-CER,1-CER_CI
-gemini,acronyms,0.6842,0.0848,0.9314,0.0207
-gemini,foreign,0.5742,0.0796,0.9363,0.0127
-gemini,gender,0.3882,0.075,0.8836,0.0174
-gemini,homographs,0.8177,0.0595,0.9599,0.0141
-gemini,ilspeech-v2-test,0.4088,0.0257,0.8903,0.0074
-gemini,minimal stress pairs,0.5467,0.0833,0.9049,0.0197
-gemini,names,0.4067,0.08,0.8713,0.022
-gemini,penultimate stress,0.6623,0.0753,0.9563,0.0099
-gemini,rare phonemes,0.5364,0.0779,0.9052,0.02
-gemini,slang,0.641,0.0765,0.9243,0.0191
-gemini,OVERALL,0.4971,0.0207,0.9049,0.0048
+gemini,acronyms,0.6908,0.086,0.9351,0.0207
+gemini,foreign,0.6581,0.0769,0.9503,0.0125
+gemini,gender,0.6382,0.0733,0.9397,0.0141
+gemini,homographs,0.9015,0.0415,0.976,0.0108
+gemini,ilspeech-v2-test,1.0,0.0,1.0,0.0
+gemini,minimal stress pairs,0.6933,0.0733,0.929,0.0195
+gemini,names,0.6133,0.08,0.912,0.0222
+gemini,penultimate stress,0.8808,0.0507,0.9839,0.0074
+gemini,rare phonemes,0.5497,0.0732,0.9079,0.02
+gemini,slang,0.6923,0.075,0.9355,0.0189
+gemini,OVERALL,0.8605,0.0175,0.9738,0.0035
 renikud,acronyms,0.6579,0.0767,0.911,0.0275
 renikud,foreign,0.5355,0.0777,0.8889,0.0235
 renikud,gender,0.5066,0.0804,0.8292,0.0346
