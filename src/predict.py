@@ -7,6 +7,12 @@ From repo root ``renikud/``, use the benchmark package directory once:
 
 Do not run ``cd categorized-heb-g2p-benchmark`` again if your shell is already there.
 
+Gold labels come from ``--gt`` (default ``data/gt.csv``). Gemini reference IPA for the same
+``(Category, Text)`` rows and **same word indices as gold** comes from ``--gt-gemini``
+(default ``data/gt_gemini.csv``); each row's ``Label`` uses the same ``index=ipa`` format as gold.
+Pass ``--gt-gemini ""`` to omit the ``gemini`` column. Rows with no matching Gemini row get an
+empty ``gemini`` string (after joining per-target slots with spaces).
+
 Renikud (PyTorch checkpoints, recommended — two classifiers + Phonikud ONNX):
 
     uv run src/predict.py \\
@@ -166,6 +172,13 @@ def resolve_word_index(idx: int, n_words: int) -> int:
     return idx
 
 
+def gemini_slice_for_targets(
+    targets: dict[int, str], targets_gem: dict[int, str]
+) -> str:
+    """Same word-index keys as gold ``targets``; IPA strings from Gemini ``Label``."""
+    return " ".join(targets_gem.get(k, "") for k in targets)
+
+
 def preds_from_word_list(words_pred: list[str], targets: dict[int, str]) -> str:
     n = len(words_pred)
     keys_order = list(targets.keys())
@@ -178,6 +191,7 @@ def preds_from_word_list(words_pred: list[str], targets: dict[int, str]) -> str:
 
 
 PREDICTION_COLUMN_ORDER = (
+    "gemini",
     "renikud",
     "renikud_phonikud",
     "renikud_ctc",
@@ -342,6 +356,12 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--gt", default="data/gt.csv")
     parser.add_argument(
+        "--gt-gemini",
+        default="data/gt_gemini.csv",
+        help="Optional CSV (Category, Text, Label) with Gemini IPA per same slices as --gt. "
+        "Empty string to skip gemini column.",
+    )
+    parser.add_argument(
         "--renikud-checkpoint",
         default="",
         help="Renikud classifier dir with model.safetensors (e.g. .../checkpoint-best)",
@@ -367,6 +387,18 @@ def main() -> None:
         default=default_phonikud_byt5_model(),
         help="Phonikud ByT5 model dir (config + weights) → column phonikud_byt5. Empty to skip.",
     )
+    parser.add_argument(
+        "--category",
+        action="append",
+        default=[],
+        metavar="NAME",
+        help="Run only these Category values from --gt (repeatable). Merges into --output when set.",
+    )
+    parser.add_argument(
+        "--output",
+        default="data/predictions.csv",
+        help="Predictions CSV path (default: data/predictions.csv).",
+    )
     args = parser.parse_args()
 
     gt_path = Path(args.gt)
@@ -382,6 +414,33 @@ def main() -> None:
     df = df[[cat_col, text_col, label_col]].dropna(subset=[text_col, label_col])
     df[label_col] = df[label_col].astype(str)
     df = df[df[label_col].str.strip().astype(bool)]
+
+    category_filter = {c.strip() for c in args.category if str(c).strip()}
+    if category_filter:
+        df = df[df[cat_col].astype(str).str.strip().isin(category_filter)].copy()
+        if df.empty:
+            raise SystemExit(f"No rows in {gt_path} for --category {sorted(category_filter)}")
+        print(f"Category filter: {sorted(category_filter)} ({len(df)} rows)")
+
+    gem_lookup: dict[tuple[str, str], str] = {}
+    gem_arg = str(args.gt_gemini or "").strip()
+    if gem_arg:
+        gem_path = Path(gem_arg)
+        if not gem_path.is_file():
+            raise SystemExit(f"Missing --gt-gemini: {gem_path}")
+        df_g = pd.read_csv(gem_path)
+        df_g.columns = [str(c).strip() for c in df_g.columns]
+        df_g = df_g.rename(columns={"category": "Category", "sentence": "Text", "gt_raw": "Label"})
+        g_cat = "Category" if "Category" in df_g.columns else "category"
+        g_text = "Text" if "Text" in df_g.columns else "sentence"
+        g_lab = "Label" if "Label" in df_g.columns else "gt_raw"
+        if g_lab not in df_g.columns:
+            raise SystemExit(f"{gem_path} needs a Label column (or gt_raw)")
+        for _, grow in df_g.iterrows():
+            if pd.isna(grow.get(g_text)) or pd.isna(grow.get(g_lab)):
+                continue
+            key = (str(grow[g_cat]).strip(), str(grow[g_text]).strip())
+            gem_lookup[key] = str(grow[g_lab]).strip()
 
     phonikud_model = Phonikud(args.phonikud_onnx)
 
@@ -460,6 +519,11 @@ def main() -> None:
         if not targets:
             continue
 
+        gkey = (str(category).strip(), sentence)
+        gem_label = gem_lookup.get(gkey, "") if gem_lookup else ""
+        targets_gem = parse_targets(gem_label) if gem_label else {}
+        gem_phonemes = gemini_slice_for_targets(targets, targets_gem)
+
         row_models: dict[str, str] = {}
         for col_name, bundle in renikud_torch_named:
             model, tokenizer, device, max_len = bundle
@@ -512,8 +576,11 @@ def main() -> None:
             "sentence": sentence,
             "word_indices": word_indices,
             "gt": gt_phonemes,
+            "gemini": gem_phonemes,
         }
         for key in PREDICTION_COLUMN_ORDER:
+            if key == "gemini":
+                continue
             if key == "phonikud":
                 rec[key] = phonikud_pred
             elif key in row_models:
@@ -521,10 +588,26 @@ def main() -> None:
         rows.append(rec)
 
     out = pd.DataFrame(rows)
-    ordered_cols = [c for c in ["category", "sentence", "word_indices", "gt", *PREDICTION_COLUMN_ORDER] if c in out.columns]
+    ordered_cols = [
+        c
+        for c in ["category", "sentence", "word_indices", "gt", *PREDICTION_COLUMN_ORDER]
+        if c in out.columns
+    ]
     out = out[ordered_cols]
-    out_path = Path("data/predictions.csv")
+    out_path = Path(args.output)
     out_path.parent.mkdir(parents=True, exist_ok=True)
+
+    if category_filter and out_path.is_file():
+        prev = pd.read_csv(out_path)
+        n_replaced = int(prev["category"].astype(str).str.strip().isin(category_filter).sum())
+        prev = prev[~prev["category"].astype(str).str.strip().isin(category_filter)]
+        n_new = len(out)
+        out = pd.concat([prev, out], ignore_index=True)
+        print(
+            f"Merged into {out_path}: replaced {n_replaced} rows, "
+            f"added {n_new} for {sorted(category_filter)}, kept {len(prev)} other rows"
+        )
+
     out.to_csv(out_path, index=False, quoting=csv.QUOTE_ALL)
     print(f"Saved {len(out)} rows to {out_path}")
     counts = out["category"].value_counts().sort_index()

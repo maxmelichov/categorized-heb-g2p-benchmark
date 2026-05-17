@@ -31,6 +31,13 @@ MODEL_ORDER = [
 ]
 # Still scored in CSV; omitted from radar/bar charts (requested).
 EXCLUDE_FROM_PLOTS = frozenset({"renikud_ctc", "phonikud_byt5"})
+# Radar chart: three systems only (bar charts still use all plot_models).
+RADAR_PLOT_MODELS = ("gemini", "renikud", "phonikud")
+RADAR_MODEL_LABELS = {
+    "gemini": "Gemini",
+    "renikud": "Renikud",
+    "phonikud": "Phonikud",
+}
 MODEL_LABELS = {
     "gemini": "Gemini",
     "renikud": "Renikud vox",
@@ -163,8 +170,9 @@ def radar_factory(num_vars):
                 y = np.append(y, y[0])
                 line.set_data(x, y)
 
-        def set_varlabels(self, labels):
-            self.set_thetagrids(np.degrees(theta), labels)
+        def set_varlabels(self, labels, *, fontsize=None):
+            kwargs = {"fontsize": fontsize} if fontsize is not None else {}
+            self.set_thetagrids(np.degrees(theta), labels, **kwargs)
 
         def _gen_axes_patch(self):
             return Circle((0.5, 0.5), 0.5)
@@ -182,18 +190,23 @@ def plot_radar(
     plot_models: list[str],
     *,
     output_path: str = "data/radar_chart.png",
-    title_suffix: str = "",
+    model_labels: dict[str, str] | None = None,
+    category_fontsize: float = 17,
+    legend_fontsize: float = 17,
+    show_chart_title: bool = False,
+    show_metric_subtitles: bool = False,
 ):
     """Radar chart comparing WER and CER across categories (excluding OVERALL)."""
     cat_results = results[results["category"] != "OVERALL"]
     cats = [c for c in categories if c != "OVERALL"]
     num_vars = len(cats)
+    labels = model_labels or MODEL_LABELS
 
     theta = radar_factory(num_vars)
 
-    fig, axes = plt.subplots(figsize=(12, 5), ncols=2,
+    fig, axes = plt.subplots(figsize=(14, 7), ncols=2,
                              subplot_kw=dict(projection="radar"))
-    fig.subplots_adjust(wspace=0.4)
+    fig.subplots_adjust(wspace=0.55, top=0.88, bottom=0.12, left=0.05, right=0.88)
 
     order_rank = {m: i for i, m in enumerate(MODEL_ORDER)}
     models = sorted(
@@ -208,8 +221,9 @@ def plot_radar(
             ax.set_ylim(0.55, 1.0)
         else:
             ax.set_rgrids([0.2, 0.4, 0.6, 0.8], angle=0)
-        ax.set_title(f"{metric}  (↑ higher is better)", weight="bold",
-                     position=(0.5, 1.15), ha="center")
+        if show_metric_subtitles:
+            ax.set_title(f"{metric}  (↑ higher is better)", weight="bold",
+                         position=(0.5, 1.15), ha="center")
         for i, model in enumerate(models):
             vals = [
                 cat_results.loc[
@@ -219,16 +233,23 @@ def plot_radar(
                 for c in cats
             ]
             color = MODEL_COLORS.get(model, cmap[i % len(cmap)])
-            lbl = MODEL_LABELS.get(model, model)
+            lbl = labels.get(model, MODEL_LABELS.get(model, model))
             ls = MODEL_LINESTYLES.get(model, "-")
             ax.plot(theta, vals, color=color, linestyle=ls, linewidth=2.0, label=lbl)
             ax.fill(theta, vals, facecolor=color, alpha=0.12)
-        ax.set_varlabels(cats)
+        ax.set_varlabels(cats, fontsize=category_fontsize)
+        ax.tick_params(axis="x", pad=12)
 
-    axes[0].legend(loc="upper left", bbox_to_anchor=(1.02, 1.02), fontsize="small")
-    fig.suptitle(f"Radar Chart — 1-WER & 1-CER per Category{title_suffix}", weight="bold")
-    plt.tight_layout()
-    plt.savefig(output_path, dpi=150)
+    axes[0].legend(
+        loc="upper left",
+        bbox_to_anchor=(1.08, 1.05),
+        fontsize=legend_fontsize,
+        frameon=True,
+    )
+    if show_chart_title:
+        fig.suptitle("Radar Chart — 1-WER & 1-CER per Category", weight="bold")
+    fig.savefig(output_path, dpi=150, bbox_inches="tight", pad_inches=0.25)
+    plt.close(fig)
     print(f"Saved {output_path}")
 
 
@@ -358,16 +379,18 @@ def main():
         plt.savefig(output_path, dpi=150)
         print(f"Saved {output_path}")
 
+    radar_models = [m for m in RADAR_PLOT_MODELS if m in models]
+    missing_radar = [m for m in RADAR_PLOT_MODELS if m not in models]
+    if missing_radar:
+        print(f"Radar chart skips missing columns: {', '.join(missing_radar)}")
     plot_radar(
         results,
         all_cats,
-        plot_models,
+        radar_models,
         output_path=f"data/radar_chart{args.plot_suffix}.png",
-        title_suffix=(
-            f"\nIPA normalization: {args.normalize_ipa}"
-            if args.normalize_ipa != "raw"
-            else ""
-        ),
+        model_labels=RADAR_MODEL_LABELS,
+        show_chart_title=False,
+        show_metric_subtitles=False,
     )
 
 
